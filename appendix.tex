@@ -1,0 +1,108 @@
+\section{Flat-Field Generation and Analysis Configuration} \label{app:config}
+
+For reproducibility we record here the exact inputs used to build the deep $i$-band combined
+flat and to run the single-detector analysis.
+
+The analysis notebooks read the combined flats directly from the Butler at the USDF with the
+following configuration:
+%
+{\footnotesize
+\begin{verbatim}
+BUTLER_PATH = "/repo/main"
+COLLECTIONS = "u/plazas/LSSTCam/calib/none/treerings/flatGen-i.20260319b"
+BAND        = "i"
+\end{verbatim}
+}
+%
+The chromaticity analysis instead reads the five-band combined flats from the standard
+\texttt{LSSTCam/calib} collection.
+
+The combined $i$-band flat was produced from 290 individual PTC flat exposures (taken with the
+3s\_v2 ``natural-frequency'' sequencer on 2025-12-28) using the LSST Science Pipelines
+flat-generation pipeline, submitted through the Batch Processing Service (BPS) at the USDF.
+The submission script is reproduced below; the \texttt{SELECTION\_FLAT\_i} exposure list is
+abbreviated here (the full set of 290 exposure IDs is preserved with the analysis code).
+%
+{\footnotesize
+\begin{verbatim}
+# Generate a combined flat image from i-band PTC flats to study tree rings (2026-02-26)
+# Run this at USDF.
+
+# STEP 0: set up the LSST Science Pipelines stack
+source /sdf/group/rubin/sw/w_latest/loadLSST.bash
+setup lsst_sitcom
+
+# STEP 1: work from the home directory
+cd ${HOME}
+
+# STEP 2: environment / data selection
+export USER_CALIB_PREFIX="u/plazas/"
+export INSTRUMENT=LSSTCam
+export TICKET="none"
+export REPO=main
+export RAW_COLLECTION=LSSTCam/raw/all
+# Curated calibration inputs:
+#   LSSTCam/calib/DM-53722: defects, bias, dark, linearity, etc.
+#   LSSTCam/calib/DM-52726: flat gradient reference
+#   LSSTCam/calib/DM-51599: CBP crosstalk for 3s_v1
+#   LSSTCam/calib/DM-51669: curated calibrations
+#   LSSTCam/calib/photodiode: photodiode data
+export CALIB_COLLECTIONS=LSSTCam/calib/DM-53722,LSSTCam/calib/DM-52726,\
+LSSTCam/calib/DM-51599,LSSTCam/calib/DM-51669,LSSTCam/calib/photodiode
+export TAG=treerings
+export RERUN=20260319b   # bump to "c", "d", ... to rerun
+
+# Flats: 290 i-band PTC flats, 3s_v2 ("natural frequency") sequencer.
+# Detector 122 is excluded.
+export SELECTION_FLAT_i="instrument='LSSTCam' and detector not in (122) and \
+exposure in (2025122800010, 2025122800011, 2025122800012, 2025122800013,
+             2025122800014, 2025122800015, 2025122800024, 2025122800025,
+             ...   # 290 exposure IDs in total (full list with the analysis code)
+             2025122801080, 2025122801081, 2025122801084, 2025122801085)"
+
+# STEP 3: sanity-check the resolved BPS YAML
+cat $CP_PIPE_DIR/bps/templates/bps_flat_i.yaml | envsubst
+
+# STEP 4: submit
+bps submit -i ${RAW_COLLECTION},${CALIB_COLLECTIONS} \
+    $CP_PIPE_DIR/bps/templates/bps_flat_i.yaml
+\end{verbatim}
+}
+%
+The per-exposure Poisson noise averages down as $\sqrt{290}$ in the combine, which is what
+brings the $\sim10^{-4}$ tree-ring modulation above the single-flat noise floor.
+
+\section{Per-Detector Tree-Ring Profile Tables} \label{app:tables}
+
+We provide tabulated radial tree-ring profiles for all detectors and bands. These tables are available online at [DOI TBD] and include:
+
+\begin{itemize}
+\item Detector ID
+\item Band
+\item Fitted center $(x_0, y_0)$
+\item Initial center from HyeYun's catalog $(x_{0,\rm init}, y_{0,\rm init})$
+\item Radial coordinate $r$ (pixels)
+\item Profile amplitude $w(r)$ (fractional units)
+\item Uncertainty $\sigma_w(r)$
+\item Mask fraction versus $r$
+\item Quality flags
+\end{itemize}
+
+A sample of the table format is shown below.
+
+\begin{deluxetable*}{cccccccc}
+\tablecaption{Sample Tree-Ring Profile Table\label{tab:sample_profile}}
+\tablewidth{0pt}
+\tablehead{
+\colhead{Detector} & \colhead{Band} & \colhead{$r$} & \colhead{$w(r)$} & \colhead{$\sigma_w$} & \colhead{Mask Frac.} & \colhead{Counts} & \colhead{Flag} \\
+\colhead{} & \colhead{} & \colhead{(pix)} & \colhead{} & \colhead{} & \colhead{} & \colhead{} & \colhead{}
+}
+\startdata
+R02\_S02 & i & 100.5 & 0.0012 & 0.0003 & 0.02 & 1245 & 0 \\
+R02\_S02 & i & 101.5 & 0.0015 & 0.0003 & 0.02 & 1250 & 0 \\
+\dots & \dots & \dots & \dots & \dots & \dots & \dots & \dots
+\enddata
+\tablecomments{Full tables for all detectors and bands are available online.}
+\end{deluxetable*}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

@@ -1,8 +1,843 @@
-\section{Introduction}
+\section{Introduction} \label{sec:intro}
 
-\textbf{Put your paper here.}
-\vskip 0.4in
+Fully-depleted, abck illuminated CCDS are in used in modern mosaic CCDS cameras...  LSSTCam one of them, largest digital camera in the world. 
+
+Transverse / lateral E-fields, static, dynamic... 
+
+Tree rings are... 
+
+The Legacy Survey of Space and Time (LSST), conducted with the Vera C. Rubin Observatory, will image the entire visible southern sky every few nights for ten years, generating an unprecedented photometric and astrometric dataset \citep{Ivezic2019}. The LSST Camera (\lsstcam) is the largest digital camera ever built for astronomy, featuring a 3.2-gigapixel focal plane with 189 science CCDs \citep{Roodman2023}.
+
+Tree rings affect multiple science domains:
+
+\begin{itemize}
+\item \textbf{Flat-field calibration:} Tree rings introduce radial QE variations that must be separated from other sensor signatures (amplifier boundaries, QE residuals, mid-line breaks) to achieve percent-level flat-field accuracy.
+
+\item \textbf{Astrometry and World Coordinate Systems (WCS):} Radial QE modulations induce systematic centroid shifts in stellar images, leading to position-dependent astrometric distortions. \citet{Plazas2014} demonstrated that tree rings in DECam produce astrometric displacements of $\sim$0.01--0.02 pixels, which are significant for precision astrometry. \citet{Bernstein2017} implemented tree-ring corrections in the DECam astrometric calibration pipeline and showed that these corrections are essential for achieving sub-milliarcsecond internal astrometric precision.
+
+\item \textbf{PSF modeling:} Tree-ring-induced centroid and shape variations affect PSF model residuals. \citet{Esteves2023} found that tree rings in LSST sensor candidates produce correlated PSF size and shape residuals at the few-percent level, with spatial scales of $\sim$100--200 pixels.
+
+\item \textbf{Weak gravitational lensing:} Cosmic shear measurements require exquisite control of systematic shape and position errors. Uncorrected tree rings can produce spurious convergence and shear signals that mimic lensing effects (Okura 20150. The relationship between flat-field modulation $w(r)$ and spurious lensing quantities is \citep{Plazas2014}:
+%
+\begin{equation}
+\kappa_{\rm sp}(r) \approx -\frac{1}{2} w(r), \quad \gamma_{\rm sp}(r) \approx -\frac{1}{2} w(r).
+\end{equation}
+%
+For the \lsstcam{} $i$-band detector studied here the flat-field ring amplitude is at the
+$w \sim 10^{-4}$--$10^{-3}$ level (smaller than the $\sim$1\% amplitudes seen in some earlier
+devices), implying spurious shear $\gamma_{\rm sp} \sim 10^{-4}$; although modest per detector,
+this is a \emph{fixed-pattern} systematic that does not average down with repeated visits and
+is therefore relevant to LSST Dark Energy Science Collaboration (DESC) systematic error
+budgets.
+
+\item \textbf{Photometry and chromaticity:} Tree rings modulate pixel sensitivity as a function of position and wavelength. Understanding their chromatic properties is essential for multi-band photometric consistency and color-dependent systematics.
+
+\end{itemize}
 
 
 
-This is the Rubin Observatory overview paper: \citet{2019ApJ...873..111I}.
+Tree rings have been characterized in several astronomical CCD systems.  Look up more literature... 
+
+ \citet{Plazas2014} presented a detailed study of tree rings in the Dark Energy Camera (DECam), including a formalism for predicting astrometric displacement from flat-field modulation. \citet{Bernstein2017} implemented tree-ring astrometric corrections in the DECam pipeline. \citet{Park2020} analyzed radial period and amplitude variations in astronomical CCDs. \citet{Esteves2023} characterized tree rings in LSST sensor candidates and quantified their impact on PSF metrics.
+
+
+This paper extends previous studies to the full \lsstcam{} focal plane and provides:
+
+\begin{enumerate}
+\item focal-plane-wide, multi-band tree-ring characterization for \lsstcam,
+\item Quantitative azimuthal symmetry tests and polar-coordinate diagnostics,
+\item Band-dependent amplitude scaling and phase alignment measurements,
+\item Predicted astrometric displacements and spurious lensing signals,
+\item Per-detector, per-band radial profile templates with uncertainties and validation metrics for pipeline integration.
+\end{enumerate}
+
+
+[NOTE: Mention general transverse/lateral E-fields paper by Brittney and the conext for this paper that focuses on tree-rings]
+
+The structure of this paper is as follows. Section~\ref{sec:physics} reviews the physical origin of tree rings and the expected observables. Section~\ref{sec:data} describes the flat-field datasets. Section~\ref{sec:methods} presents our measurement methodology. Sections~\ref{sec:case_studies} and \ref{sec:focal_plane} show single-detector case studies and focal-plane-wide results. Section~\ref{sec:chromaticity} analyzes band dependence. Section~\ref{sec:science} discusses science impacts. Section~\ref{sec:correction} describes the correction model for pipelines. Section~\ref{sec:discussion} discusses limitations and future work. Section~\ref{sec:conclusions} summarizes our findings.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Physical Origin and Expected Observables} \label{sec:physics}
+
+\subsection{Detector Physics}
+
+Tree rings arise from radial variations in dopant concentration during boule growth... 
+
+
+The primary observable effects are:
+
+\begin{itemize}
+\item \textbf{Flat-field modulation:} Radial QE variations produce percent-level intensity modulations in flat-field images after illumination gradient removal.
+\item \textbf{Pixel-area modulation:} Electric field variations distort the effective pixel boundaries, leading to apparent position shifts in detected photons.
+\item \textbf{Wavelength dependence:} The depth of charge generation varies with photon wavelength, leading to different sensitivities to dopant variations at different depths. Shorter wavelengths (bluer bands) are absorbed closer to the surface and are more sensitive to near-surface field variations, while longer wavelengths penetrate deeper.
+\end{itemize}
+
+\subsection{Relation Among Observables}
+
+Following \citet{Plazas2014}, the flat-field fractional modulation $w(r)$ is related to the radial astrometric displacement $f(r)$ by:
+%
+\begin{equation}
+f(r) = -\frac{1}{r} \int_0^r r' w(r') \, dr'.
+\label{eq:displacement}
+\end{equation}
+%
+This assumes azimuthal symmetry and relates the radial intensity modulation to the radial displacement field. It is the inverse of the flux-conservation (area-distortion) relation $w = -\nabla\!\cdot\!\boldsymbol{\delta}$ for a radial displacement $\boldsymbol{\delta}=f(r)\,\hat{\mathbf r}$; the leading minus sign is the convention of \citet{Plazas2014} and \citet{Esteves2023}. After computing $f(r)$, a smooth polynomial or low-frequency trend is subtracted to isolate the oscillatory tree-ring component (the additive constant left by integrating from the smallest sampled radius is absorbed into this trend).
+
+From $f(r)\equiv d(r)$ we obtain the spin-0 (convergence, size) and spin-2 (shear, ellipticity) observables. In general,
+%
+\begin{equation}
+\kappa(r) = \frac{1}{2}\left(\frac{d\,d(r)}{dr} + \frac{d(r)}{r}\right), \qquad
+\gamma_{\rm rad}(r) = \frac{1}{2}\left(\frac{d\,d(r)}{dr} - \frac{d(r)}{r}\right),
+\end{equation}
+%
+and for radii much larger than the displacement scale both reduce to half the flat-field modulation,
+%
+\begin{equation}
+\kappa(r) \approx -\tfrac{1}{2} w(r), \qquad \gamma_{\rm rad}(r) \approx -\tfrac{1}{2} w(r).
+\label{eq:kappa_gamma}
+\end{equation}
+%
+In the ellipticity convention adopted here, the induced radial ellipticity and fractional PSF-size change are $\delta e_r(r) \approx -w(r)$ and $\delta T/T(r) \approx -w(r)$. The radial spin-2 quantities are rotated into detector Cartesian components using the polar angle $\phi$ about the ring center,
+%
+\begin{equation}
+\gamma_1 + i\gamma_2 = \gamma_{\rm rad}(r)\,e^{2i\phi}, \qquad
+\delta e_1 + i\delta e_2 = \delta e_r(r)\,e^{2i\phi}.
+\label{eq:spin2}
+\end{equation}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Data Sets} \label{sec:data}
+
+\subsection{Flat-Field Observations}
+
+We use two sets of flat-field data.
+
+\begin{enumerate}
+\item \textbf{Deep $i$-band combined flat.} A single high signal-to-noise combined flat per
+detector, built from \textbf{290} individual $i$-band ($i_{39}$) flat exposures taken with
+the ``natural-frequency'' (3s\_v2) sequencer on 2025-12-28. The exposures are combined with
+the LSST Science Pipelines flat-generation task, submitted through the Batch Processing
+Service (BPS) with the input raw collection \texttt{LSSTCam/raw/all} and the curated
+calibration inputs (defects, bias, dark, linearity, gain/PTC, brighter--fatter and flat
+gradient references) listed in Appendix~\ref{app:config}. The combining is done at the
+photon-transfer (PTC) level so that the pixel-to-pixel gain structure is preserved while the
+per-exposure Poisson noise averages down as $\sqrt{290}$, which is what makes the
+$\sim10^{-4}$ tree-ring modulation measurable. Detector 122 (\texttt{R30\_S12}) is excluded.
+The resulting combined flats live in the user collection
+\texttt{u/plazas/LSSTCam/calib/none/treerings/flatGen-i.20260319b} and are read directly from
+the Butler at the USDF; this data set is used for center fitting, radial-profile extraction,
+and the astrometric/shear predictions. The exact BPS submission script and exposure selection
+are reproduced verbatim in Appendix~\ref{app:config}.
+
+\item \textbf{Standard calibration flats (all bands).} Standard \lsstcam{} combined
+calibration flats in the five broad science bands ($g$, $r$, $i$, $z$, $y$) from the
+\texttt{LSSTCam/calib} collection (one combined flat per band and detector). These are used
+for the chromaticity analysis, where a single ring center is used across all bands.
+\end{enumerate}
+
+\subsection{Detector Coverage}
+
+Our analysis targets the full \lsstcam{} science focal plane (all 189 science CCDs, both ITL
+and e2v vendors, excluding guide and wavefront sensors and the anomalous detector 122). In
+this first draft we demonstrate the end-to-end methodology in detail on a single ITL detector,
+\texttt{R02\_S02} (detector 11); the identical per-detector pipeline is applied across the
+focal plane, and those population-level results are presented in
+Section~\ref{sec:focal_plane}.
+
+\subsection{Preprocessing and Masking}
+
+All combined flats are preprocessed with a common band-pass operation that isolates the
+ring-scale structure. Let $F(x,y)$ be the combined flat. We compute
+%
+\begin{enumerate}
+\item \textbf{Mild denoising:} a small Gaussian smoothing $F_s = F * G_{\sigma_s}$ with
+$\sigma_s = 2$--3~pixels, to suppress pixel-scale noise while preserving the broader ring
+structure.
+\item \textbf{Large-scale background:} a broad Gaussian $B = F_s * G_{\sigma_L}$ with
+$\sigma_L = 100$~pixels, which models the slowly-varying illumination and vignetting.
+\item \textbf{Fractional residual:} the band-passed image
+%
+\begin{equation}
+w_{2D}(x,y) = \frac{F_s}{B} - 1,
+\end{equation}
+%
+expressing the remaining structure as a fractional deviation from the local background, in
+which the tree rings stand out at the $\sim10^{-4}$--$10^{-3}$ level.
+\item \textbf{Outlier masking:} a robust cut flags pixels with
+$|w_{2D} - {\rm median}| > n_\sigma\,(1.4826\,{\rm MAD})$ ($n_\sigma = 5$), removing dust
+shadows, hot pixels, bad columns and similar defects into a Boolean mask \texttt{good}.
+\end{enumerate}
+%
+A Gaussian kernel has transfer function $\hat{G}(k)=e^{-2\pi^2\sigma^2 k^2}$; with
+$\sigma_s = 2$~pixels the shortest LSSTCam rings ($\lambda\simeq 20$~pixels) are attenuated
+by $\lesssim 25\%$, and since the same kernel is applied in every band this factor cancels
+in the chromatic amplitude ratios of Section~\ref{sec:case_studies}.
+
+By default \emph{masked pixels are not filled or interpolated}: the \texttt{good} mask is
+carried through to every downstream statistic, so flagged pixels are simply excluded from the
+radial binning rather than being assigned fabricated values. Optional local-median filling of
+masked pixels is available (for display or for pathological detectors) but is disabled for the
+science profiles, since filling injects a fixed spatial pattern that, under a moving trial
+center, can bias the azimuthal average.
+
+Before band-passing we optionally remove residual amplifier-to-amplifier offsets on the Butler
+flat. LSSTCam reads out through a $2\times8$ grid of 16 segments, and small gain/level
+mismatches appear as piecewise-constant steps at the segment boundaries. We estimate one
+additive offset per segment from the boundary \emph{discontinuity} — fitting the smooth trend
+on each side of a boundary and comparing the extrapolations at it, so the illumination slope
+cancels — and solve all 16 offsets jointly by least squares, gauge-fixed to zero mean
+(an ``ubercal''-style solution). Removing these steps before the large-scale Gaussian background
+estimate prevents a sharp step from ringing into a $\sigma$-neighborhood of pixels and from
+biasing radial-annulus medians that straddle a boundary; because the correction is a single
+constant per segment, it cannot create or remove radial ring structure. We monitor detector
+flatness with amplifier cross-sections (the mean along each amplifier row, clipping $50$~pixels
+from the edges) and with cuts along the two diagonals, and quantify the residual step across each
+boundary before and after correction.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Measurement Methodology} \label{sec:methods}
+
+\subsection{Center Determination}
+
+Accurate tree-ring center determination is critical, and it is complicated by the fact that
+the ring centers usually lie \emph{outside} the physical detector (for \texttt{R02\_S02} the
+center is near $(-324,\,4088)$, i.e.\ off the lower-left corner), so only a fraction of an
+annulus is sampled at any radius. We start from the catalog of \citet{Park2020} and
+optionally refine:
+
+\begin{enumerate}
+\item Start with an initial guess $(x_{0,\rm init}, y_{0,\rm init})$ from the \citet{Park2020}
+tree-ring center catalog.
+\item Optionally refine it (a run-time flag; when disabled the catalog value is used
+directly). The refinement defines an objective that maximizes the oscillatory power of the
+azimuthally-averaged radial profile after trend subtraction, and minimizes its negative with
+Powell's method within a local box ($\pm 200$~pixels), on an image down-sampled by a factor
+of 2 for speed.
+\end{enumerate}
+
+The objective function is
+%
+\begin{equation}
+{\rm Obj}(x_0, y_0) = -{\rm RMS}\!\left[ p(r) - \langle p(r) \rangle_{\rm smooth} \right],
+\end{equation}
+%
+where $p(r)$ is the median radial profile about the trial center and
+$\langle p(r)\rangle_{\rm smooth}$ is a Gaussian-smoothed trend; the true center is the one
+for which the rings align most coherently in radius, maximizing the trend-subtracted RMS.
+
+We implement three automated fitters that share this radial-coherence idea but differ in the
+statistic and optimizer, and we compare their results per detector: (i) an \emph{RMS-profile}
+fit (the trend-subtracted RMS objective above, Powell local search); (ii) an \emph{FFT
+band-power} fit, which maximizes the Fourier power of the detrended radial profile inside the
+ring-wavelength band (coarse-to-fine, Powell), and is selective for coherent oscillations; and
+(iii) an \emph{outer-radius $\sigma$} fit, which maximizes the standard deviation of the profile
+in the outer $75\%$ of radii via a global differential-evolution search
+\citep[after][]{Esteves2023}. Hereafter we refer to these as the RMS-profile, FFT band-power,
+and outer-radius fits.
+This surface is non-convex and is nearly flat along the chip$\to$center direction (a radial
+shift of the trial center barely changes the azimuthal average), so a good initial guess is
+important. For the \texttt{R02\_S02} results below we adopt the catalog center
+$(x_0, y_0) = (-324.08,\,4087.66)$.
+
+\subsection{By-Hand Concentric-Center Fit} \label{sec:handfit}
+
+As an independent cross-check of the automated fitters — and following the approach of
+\citet{Plazas2014}, who determined DECam tree-ring centers from hand-marked ring points — we
+also fit the center from points annotated by eye on the rings. The annotator marks $N$ points
+along several visible rings (spread over as wide an azimuth as possible, since the outer rings
+and a long azimuthal lever arm constrain the center best). For a trial center
+$\mathbf c=(c_x,c_y)$ we compute each point's radius $d_i=|\mathbf x_i-\mathbf c|$, cluster the
+$\{d_i\}$ into $n_{\rm ring}$ groups with one-dimensional $k$-means, and take the within-group
+radial scatter as the objective. We minimize a robust (Huber-loss) version of that scatter,
+%
+\begin{equation}
+\mathrm{Obj}(\mathbf c)=\sum_i \rho_\delta\!\left(d_i - \bar d_{\,k(i)}(\mathbf c)\right),
+\end{equation}
+%
+where $\bar d_{k}$ is the mean radius of ring $k$ and $\rho_\delta$ is the Huber function, using
+a global differential-evolution search followed by Nelder--Mead refinement; the center is
+allowed to lie outside the detector. Uncertainties on $(c_x,c_y)$ are obtained by bootstrap
+resampling of the annotated points. Whereas \citet{Plazas2014} exported the marked points from
+an external DS9 session, we perform the annotation interactively in the notebook (clicking
+directly on the band-pass-filtered flat), which is otherwise identical. The band-pass image is
+used only to make the rings visible for annotation; the center it yields is then used to extract
+the profile from the unfiltered Butler flat.
+
+Figure~\ref{fig:handfit} shows the hand-marked ring points and the fitted concentric rings for \texttt{R02\_S02}.
+
+\begin{figure}
+\centering
+\includegraphics[width=0.75\linewidth]{fig_r02s02_handfit_check.pdf}
+\caption{By-hand concentric-center fit for \texttt{R02\_S02}: ring points marked interactively
+on the band-pass-filtered $i$-band flat (green $\times$), the fitted concentric rings (red), the
+fitted center (cyan $+$), and the \citet{Park2020} catalog seed (yellow star). The resulting
+center and its comparison with the automated fitters are given in
+Section~\ref{sec:center_compare}.\label{fig:handfit}}
+\end{figure}
+
+\subsection{Polar Transform Diagnostics}
+
+Following \citet{Esteves2023}, we apply a polar coordinate transformation to validate the fitted center. The image is resampled from Cartesian $(x, y)$ to polar $(r, \theta)$ coordinates. A correctly identified center produces horizontal tree-ring lines in $(r, \theta)$ space. Misidentified centers result in tilted or disturbed patterns.
+
+\subsection{Radial Profile Extraction}
+
+We compute the radial profile by binning pixels into annuli of width $\Delta r = 1$ pixel and taking the median intensity in each annulus. The median is robust to outliers and masked pixels. Uncertainties are estimated using the median absolute deviation (MAD):
+%
+\begin{equation}
+\sigma_{\rm median} \approx 1.2533 \times \frac{1.4826 \times {\rm MAD}}{\sqrt{N}},
+\end{equation}
+%
+where $N$ is the number of valid pixels in the annulus.
+
+\subsection{Trend Subtraction}
+
+We subtract a smooth radial trend using a NaN-aware 1D Gaussian filter ($\sigma = 50$ pixels) to isolate the oscillatory tree-ring signal $w(r) = p(r) - p_{\rm trend}(r)$. This separates the rings from residual large-scale QE variations left in the azimuthal average.
+
+\subsection{Model Subtraction Test and Metrics} \label{sec:subtraction}
+
+As an internal consistency check we reconstruct a 2D ring model $M(x,y)$ by interpolating the
+1D trend-subtracted profile $w(r)$ onto the detector at the fitted center, and subtract it
+from the band-passed image. We quantify the subtraction with (i) the counts-weighted RMS of
+the 1D ring profile before and after subtraction, (ii) the \emph{suppression factor}
+${\rm RMS}_{\rm after}/{\rm RMS}_{\rm before}$, (iii) an approximate reduced chi-square of the
+residual profile relative to zero, and (iv) the 2D variance ratio of the image before and
+after subtraction. Because the model is derived from the same image this test is not fully
+independent, but a large suppression confirms that the center and profile describe the ring
+pattern well.
+
+\subsection{Astrometric Displacement and Its Uncertainty} \label{sec:astro_method}
+
+We integrate Equation~\ref{eq:displacement} numerically (cumulative trapezoid) to obtain the
+raw displacement profile and then subtract a smooth/polynomial trend to remove the
+integration's large-scale mode. Propagating the annular profile errors $\sigma_{w}(r_i)$
+through the discrete integral $I(r)=\int_0^r r' w\,dr'$, and treating radial bins as
+independent, gives
+%
+\begin{equation}
+\sigma_I^2(r_k) \approx \sum_{i \le k}\left(r_i\,\sigma_{w_i}\,\Delta r_i\right)^2,
+\qquad
+\sigma_f(r) \approx \frac{\sigma_I(r)}{r}.
+\label{eq:astro_err}
+\end{equation}
+%
+This is a first-order statistical estimate only; it omits covariance between neighboring
+bins and systematic uncertainties from the center and from the detrending.
+
+\subsection{Derived Observables and 2D Templates} \label{sec:templates}
+
+From $w(r)$ and $d(r)$ we form the radial observables $\kappa(r)$, $\gamma_{\rm rad}(r)$,
+$\delta T/T(r)$ and $\delta e_r(r)$ (Section~\ref{sec:physics}), and interpolate them back
+onto the detector to build 2D templates. Scalar quantities map directly; the spin-2
+quantities are rotated into Cartesian components with Equation~\ref{eq:spin2}. As a
+detector-level quick look we also estimate the shear two-point correlation
+$\xi_+(\theta)=\langle\gamma_t\gamma_t\rangle+\langle\gamma_\times\gamma_\times\rangle$ from
+the predicted shear map.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Single-Detector Case Studies} \label{sec:case_studies}
+
+We present detailed results for four representative detectors:
+
+\begin{enumerate}
+\item \textbf{R02\_S02 (ITL):} A strong tree-ring example with clear radial modulations.
+\item \textbf{[TBD] (e2v):} A strong e2v example.
+\item \textbf{[TBD]:} A weak tree-ring detector.
+\item \textbf{[TBD]:} A detector with asymmetric or pathological features.
+\end{enumerate}
+
+For each case, we show:
+
+\begin{itemize}
+\item Raw flat-field image
+\item Filtered (preprocessed) image
+\item Polar coordinate transform
+\item Radial profile by band
+\item Sector profiles (azimuthal symmetry check)
+\item Dominant period and amplitude versus radius
+\item Before/after correction comparison
+\end{itemize}
+
+\subsection{Example: Detector R02\_S02 (ITL)} \label{sec:r02s02}
+
+We illustrate the full methodology on detector \texttt{R02\_S02} (LSSTCam detector 11, ITL),
+using the deep 290-exposure $i$-band combined flat described in Section~\ref{sec:data} and the
+\citet{Park2020} catalog center $(x_0,y_0)=(-324.08,\,4087.66)$.
+
+Figure~\ref{fig:r02s02_raw} shows the raw combined flat. The tree rings are directly visible
+as faint concentric arcs curving through the lower-right of the device, centered off the
+lower-left corner; also visible are the amplifier-segment boundaries (the horizontal mid-line
+at $y\simeq2000$ and the vertical segment edges), dust shadows, and the smooth illumination
+gradient. Figure~\ref{fig:r02s02_filtered} shows the band-passed image $w_{2D}$
+(Section~\ref{sec:data}), in which the illumination gradient is removed and the ring pattern
+is greatly enhanced. Figure~\ref{fig:r02s02_center} overlays concentric circles at the adopted
+center as a visual check that the arcs are indeed concentric about it.
+
+\begin{figure}
+\centering
+\includegraphics[width=0.62\linewidth]{fig_r02s02_raw.pdf}
+\caption{Raw $i$-band combined flat for \texttt{R02\_S02} (detector 11, ITL), built from 290
+exposures. Tree rings appear as faint concentric arcs in the lower-right; amplifier
+boundaries, dust shadows and the illumination gradient are also visible. The ring center lies
+off the lower-left corner of the device.\label{fig:r02s02_raw}}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.62\linewidth]{fig_r02s02_filtered.pdf}
+\caption{Band-passed (tree-ring-filtered) image $w_{2D}=F_s/B-1$ of \texttt{R02\_S02}. Removing
+the large-scale illumination model $B$ makes the concentric ring pattern clearly
+visible.\label{fig:r02s02_filtered}}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.62\linewidth]{fig_r02s02_center_check.pdf}
+\caption{Filtered image with concentric circles drawn at the adopted center
+$(-324.1,\,4087.7)$. The rings track the overlaid circles, confirming the center.\label{fig:r02s02_center}}
+\end{figure}
+
+The azimuthally-averaged radial profile (Figure~\ref{fig:r02s02_radial}) resolves the
+oscillatory ring signal after the smooth 1D trend is removed. The trend-subtracted amplitude
+is at the level of a few $\times10^{-4}$, growing toward the largest radii where the annuli
+clip only a small corner of the device and are therefore both noisier and affected by
+residual edge illumination.
+
+\begin{figure}
+\centering
+\includegraphics[width=0.9\linewidth]{fig_r02s02_radial_profile.pdf}
+\caption{Radial profile of \texttt{R02\_S02} in the $i$-band. \emph{Top:} annular-median
+profile $p(r)$ (points with MAD-based error bars) and the smooth trend $p_{\rm trend}(r)$.
+\emph{Bottom:} trend-subtracted tree-ring signal $w(r)=p-p_{\rm trend}$, with amplitude of a
+few $\times10^{-4}$. The larger excursions beyond $r\gtrsim4300$~pixels are dominated by the
+sparsely-sampled, edge-affected annuli.\label{fig:r02s02_radial}}
+\end{figure}
+
+The model-subtraction test (Section~\ref{sec:subtraction}; Figures~\ref{fig:r02s02_sub} and
+\ref{fig:r02s02_beforeafter}) confirms that the fitted center and profile capture the ring
+pattern. The counts-weighted RMS of the 1D ring profile drops from
+${\rm RMS}_{\rm before}=2.0\times10^{-4}$ to ${\rm RMS}_{\rm after}=1.7\times10^{-5}$, a
+suppression factor of $0.086$ (about $91\%$ of the radial ring power removed, a factor
+$\sim12$). The residual reduced chi-square relative to zero is $\chi^2_\nu\simeq1.13$,
+indicating that the residual radial signal is close to the level expected from the annular
+uncertainties. The 2D variance explained is $\simeq2.6\%$; this is modest only because the
+total image variance is dominated by defects, masking, and residual large-scale structure
+rather than by rings, so the ring-specific 1D metrics are the informative ones.
+
+\begin{figure*}
+\centering
+\includegraphics[width=0.95\linewidth]{fig_r02s02_subtraction.pdf}
+\caption{Model-subtraction test for \texttt{R02\_S02}. \emph{Left:} band-passed image.
+\emph{Middle:} 2D ring model built by interpolating the 1D profile $w(r)$ onto the detector
+at the fitted center. \emph{Right:} residual after subtraction, in which the concentric ring
+pattern is largely removed (non-ring defects and edge structure remain).\label{fig:r02s02_sub}}
+\end{figure*}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.9\linewidth]{fig_r02s02_before_after.pdf}
+\caption{1D tree-ring profile of \texttt{R02\_S02} before (top) and after (bottom) subtracting
+the 2D ring model, showing the $\sim12\times$ reduction in ring amplitude.\label{fig:r02s02_beforeafter}}
+\end{figure}
+
+\subsubsection{Predicted astrometric and lensing observables for R02\_S02}
+
+Applying Equations~\ref{eq:displacement}--\ref{eq:spin2} to the measured $i$-band profile
+yields the detector-level tree-ring templates. The predicted radial astrometric displacement
+(Figure~\ref{fig:r02s02_astro}) has a peak amplitude of $|f|_{\max}\simeq0.025$~pixels,
+consistent with the $\sim0.01$--$0.02$~pixel level found for DECam by \citet{Plazas2014}; over
+most of the well-sampled area $|f|\lesssim0.005$~pixels, rising toward the noisy outer edge.
+Figure~\ref{fig:r02s02_field} shows the corresponding 2D displacement field, and
+Figure~\ref{fig:r02s02_obs} the radial convergence $\kappa(r)$, radial shear
+$\gamma_{\rm rad}(r)$ and fractional size change $\delta T/T(r)$. The full set of 2D scalar and
+spin-2 templates ($\delta T/T$, $\kappa$, $\gamma_{\rm rad}$, $\gamma_1$, $\gamma_2$,
+$\delta e_1$) is shown in Figure~\ref{fig:r02s02_templates}; the size template reaches
+$\delta T/T\sim1.5\times10^{-3}$ and the shear/convergence templates
+$\sim(3$--$4)\times10^{-4}$, again largest at the device edge. Finally,
+Figure~\ref{fig:r02s02_xiplus} shows a detector-level quick-look shear two-point correlation
+$\xi_+(\theta)$; it peaks at $\sim10^{-9}$ on the ring scale (tens of pixels) and falls to
+$\lesssim10^{-12}$ by $\theta\sim2000$~pixels, illustrating how the alternating
+tangential/radial ring pattern averages down at large separations.
+
+\begin{figure}
+\centering
+\includegraphics[width=0.9\linewidth]{fig_r02s02_astrometry.pdf}
+\caption{Predicted radial astrometric displacement for \texttt{R02\_S02}. \emph{Top:} raw
+integrated displacement and the removed large-scale trend. \emph{Bottom:} detrended
+prediction, with peak amplitude $\simeq0.025$~pixels.\label{fig:r02s02_astro}}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.62\linewidth]{fig_r02s02_displacement_field.pdf}
+\caption{Predicted 2D radial astrometric displacement field
+$\boldsymbol{\delta}=f(r)\hat{\mathbf r}$ for \texttt{R02\_S02} (arrows; sub-sampled).\label{fig:r02s02_field}}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.85\linewidth]{fig_r02s02_observables_radial.pdf}
+\caption{Radial tree-ring observables for \texttt{R02\_S02} derived from $w(r)$: convergence
+$\kappa(r)$, radial shear $\gamma_{\rm rad}(r)$, and fractional PSF-size change $\delta T/T(r)$
+(Equations~\ref{eq:kappa_gamma}).\label{fig:r02s02_obs}}
+\end{figure}
+
+\begin{figure*}
+\centering
+\includegraphics[width=0.98\linewidth]{fig_r02s02_2d_templates.pdf}
+\caption{2D detector templates for \texttt{R02\_S02}: fractional size change $\delta T/T$,
+convergence $\kappa$, radial shear $\gamma_{\rm rad}$, and Cartesian spin-2 components
+$\gamma_1$, $\gamma_2$, $\delta e_1$ (Equation~\ref{eq:spin2}). All share the concentric ring
+geometry and grow toward the device edge.\label{fig:r02s02_templates}}
+\end{figure*}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.75\linewidth]{fig_r02s02_xiplus.pdf}
+\caption{Detector-level quick-look shear two-point correlation $|\xi_+(\theta)|$ predicted from
+the \texttt{R02\_S02} tree-ring shear template. The signal peaks at $\sim10^{-9}$ on the ring
+scale and averages down by $\gtrsim3$ orders of magnitude by $\theta\sim2000$~pixels.\label{fig:r02s02_xiplus}}
+\end{figure}
+
+
+\subsubsection{Center comparison across methods} \label{sec:center_compare}
+
+Table~\ref{tab:centers} compares the \texttt{R02\_S02} center from the three automated fitters
+(Section~\ref{sec:methods}) against the \citet{Park2020} tree-ring center catalog seed, and the
+by-hand concentric fit (Section~\ref{sec:handfit}). The three automated methods scatter by up to
+$153$~pixels: the RMS-profile fit stays closest to the Park+2020 catalog seed
+($|\Delta|\simeq11$~pixels), while the FFT band-power and outer-radius fits move by
+$\sim82$~pixels in nearly opposite directions.
+This scatter is dominated by the well-known azimuthal-mean degeneracy: the FFT objective's
+curvature is effectively flat along the chip$\to$center direction (its along-ridge uncertainty
+semi-axis is unbounded, with the tightly-constrained axis, $\sigma_\perp\simeq19$~pixels,
+perpendicular to it). With a dominant ring wavelength $\lambda\simeq2\times10^2$~pixels here, the
+amplitude-attenuation criterion (Section~\ref{sec:handfit}; a center error smears the rings by
+$\exp[-2\pi^2\sigma_r^2/\lambda^2]$) requires the \emph{perpendicular} component of the center to
+be known to $\sigma_r\lesssim\lambda/15\sim13$~pixels for $<10\%$ amplitude loss, while the
+along-ridge component is far less critical.
+
+The by-hand concentric fit (Section~\ref{sec:handfit}; $29$ points marked on $n_{\rm ring}=4$
+rings) yields $(c_x,c_y)=(-270.3,\,4043.4)$~pixels, with a small within-ring RMS residual of
+$6.6$~pixels but a large, nearly isotropic bootstrap center uncertainty of
+$\approx(550,\,525)$~pixels. This large uncertainty is itself the key result: annotating an
+on-chip wedge of rings whose center lies $\sim\!4000$~pixels off the device gives a very short
+lever arm, so the hand fit — like the FFT fit — is only weakly constraining, especially along
+the ridge. The hand-fit center lies $51$, $65$, and $70$~pixels from the FFT, RMS, and catalog
+centers respectively, and $152$~pixels from the outer-radius fit; i.e.\ it is consistent (well within
+its own uncertainty) with the FFT/RMS/catalog cluster and disfavors the outer-radius solution. Rather
+than acting as a decisive tie-breaker, the by-hand fit therefore \emph{corroborates} the
+FFT/RMS/catalog centers and independently confirms that the dominant center systematic for
+\texttt{R02\_S02} is the along-ridge degeneracy shared by all azimuthal-average methods. Pinning
+the center substantially better would require rings sampled over a wider azimuth (e.g.\ combining
+adjacent detectors) or an independent anchor.
+
+\begin{deluxetable}{lccc}
+\tablecaption{Fitted tree-ring center of \texttt{R02\_S02} (det 11, ITL) by method, and offset
+from the \citet{Park2020} catalog seed.\label{tab:centers}}
+\tablehead{\colhead{Method} & \colhead{$(c_x, c_y)$ [pix]} & \colhead{$\Delta$ from seed [pix]}
+ & \colhead{$|\Delta|$ [pix]}}
+\startdata
+Catalog seed \citep{Park2020} & $(-324.1,\ 4087.7)$ & --- & --- \\
+RMS profile (Powell)          & $(-313.7,\ 4091.7)$ & $(+10.4,\ +4.0)$   & $11.1$ \\
+FFT band-power (Powell)       & $(-241.6,\ 4085.6)$ & $(+82.5,\ -2.1)$   & $82.5$ \\
+Outer-radius $\sigma$ (diff.\ evolution)    & $(-382.2,\ 4146.0)$ & $(-58.1,\ +58.3)$  & $82.3$ \\
+By-hand concentric (this work) & $(-270.3,\ 4043.4)$ & $(+53.8,\ -44.2)$ & $69.6$ \\
+\enddata
+\tablecomments{Three-method (automated) spread (max pairwise distance) $=153$~pixels; the
+methods do not agree to the adopted $30$~pixel tolerance for this detector. The FFT fit is
+degenerate along the chip$\to$center direction ($\sigma_{\rm along}\!\to\!\infty$,
+$\sigma_\perp\simeq19$~pixels), so most of the scatter is along that (benign) axis. The by-hand
+concentric fit uses $29$ hand-marked points on $n_{\rm ring}=4$ rings (RMS ring residual
+$6.6$~pixels); its bootstrap center uncertainty is large and nearly isotropic,
+$\sigma(c_x,c_y)\approx(550,\,525)$~pixels, reflecting the short lever arm of an on-chip wedge of
+far-off-chip rings.}
+\end{deluxetable}
+
+\subsubsection{Choosing the center: quality metrics} \label{sec:center_metrics}
+
+Because the fitters disagree, we need an objective way to \emph{select} a center. We evaluate
+several per-center quality metrics and rank the candidate centers by each:
+%
+\begin{itemize}
+\item \textbf{Ring-band SNR} (primary): the FFT peak power of the $1$-D detrended profile inside
+the ring-wavelength band divided by the out-of-band noise floor. Higher is better. Because it
+integrates \emph{coherent} power at the ring wavelength, it averages down white noise, and on
+controlled tests it varies by more than an order of magnitude between the true center and centers
+offset by $\gtrsim20$~pixels. This is the metric we rank by.
+\item \textbf{Concentricity / polar variance} (secondary): the true center makes each thin
+annulus lie on a single ring, so the azimuthal ($\theta$) variance of the flat at fixed radius is
+minimized there. We measure this by binning the background-corrected flat $R$ into $(r,\theta)$
+cells, averaging within each cell to suppress per-pixel noise, and taking the counts-weighted RMS
+of the across-$\theta$ variance. Lower is better.
+\item \textbf{2-D variance ratio} $\mathrm{var}(R-M)/\mathrm{var}(R)$ from the model-subtraction
+test.
+\end{itemize}
+%
+The ring-band SNR is the robust discriminator. The concentricity and $2$-D variance metrics are
+comparatively weak at \lsstcam{} ITL ring amplitudes: with a ring amplitude of $\sim\!10^{-4}$
+sitting under a per-pixel flat noise of $\sim\!10^{-3}$, the pixel-variance suppression saturates
+near unity (a noise-floor effect; Section~\ref{sec:subtraction}) and the concentricity metric
+separates centers only after aggressive cell-averaging — the naive per-annulus scatter is
+noise-dominated and does not discriminate at all. We therefore rank centers by the ring-band SNR,
+use the concentricity and variance metrics as consistency checks, and cross-check against the
+$2$-D residual images by eye. Applied across the focal plane this ranking (over the FFT
+band-power, RMS-profile, outer-radius, catalog, and by-hand centers) yields a recommended working
+center per detector; the by-hand center of \texttt{R02\_S02} enters this comparison on the same
+footing as the automated ones.
+
+\subsection{Chromaticity of \texttt{R02\_S02}} \label{sec:chromaticity}
+
+To test the wavelength dependence we load the standard \texttt{LSSTCam/calib} combined flats
+for \texttt{R02\_S02} in the five science bands $g,r,i,z,y$, preprocess them identically, and
+extract the radial profile of each about a \emph{single} fixed ring center
+$(x_0,y_0)=(-305.0,\,4092.6)$ (the rings are one physical pattern, so the same center is used
+for all bands). Figure~\ref{fig:chroma_grid} shows the band flats after filtering, and
+Figures~\ref{fig:chroma_profiles} and \ref{fig:chroma_profiles_zoom} overlay the resulting
+ring profiles $w_b(r)$.
+
+\subsubsection{Amplitude Scaling Across Bands}
+
+We test whether the profiles share a common radial shape and differ only in amplitude, fitting
+%
+\begin{equation}
+w_{b}(r) = A_{b}\, w_{\rm ref}(r),
+\end{equation}
+%
+with reference band $g$. The least-squares estimate over the well-sampled radial range is
+$A_b = \sum_i w_{{\rm ref},i} w_{b,i} / \sum_i w_{{\rm ref},i}^2$, with an error from the
+residual scatter. For \texttt{R02\_S02} we measure the amplitude ordering
+$A_g > A_r > A_i > A_z > A_y$ (Table~\ref{tab:chroma}, Figure~\ref{fig:chroma_amp}), exactly
+the wavelength ordering seen for DECam by \citet{Plazas2014}: shorter (bluer) wavelengths are
+absorbed nearer the back-illuminated entrance surface and their photo-carriers drift the full
+sensor thickness through the transverse ring field, producing the largest apparent
+flat-field amplitude, while redder photons convert closer to the collection gates and show a
+smaller amplitude. Dividing each profile by its $A_b$ collapses the bands onto a common curve
+(Figures~\ref{fig:chroma_rescaled} and \ref{fig:chroma_rescaled_zoom}), confirming a
+wavelength-independent shape.
+
+\begin{deluxetable}{ccc}
+\tablecaption{Chromatic amplitude scaling and phase for \texttt{R02\_S02} (reference band $g$).\label{tab:chroma}}
+\tablehead{\colhead{Band} & \colhead{$A_b/A_g$} & \colhead{Pearson $\rho$ (vs.\ $g$)}}
+\startdata
+$g$ & $1.0000$          & $1.000$ \\
+$r$ & $0.804 \pm 0.010$ & $0.833$ \\
+$i$ & $0.742 \pm 0.010$ & $0.806$ \\
+$z$ & $0.650 \pm 0.009$ & $0.807$ \\
+$y$ & $0.400 \pm 0.012$ & $0.524$ \\
+\enddata
+\tablecomments{Cross-correlation with the $g$-band profile peaks at \emph{zero} lag for all
+bands (peak $\xi$ of $0.56$, $0.63$, $0.61$, $0.44$ for $r,i,z,y$), confirming phase
+alignment.}
+\end{deluxetable}
+
+\subsubsection{Phase Alignment}
+
+Cross-correlating each band profile against the $g$-band reference
+(Figure~\ref{fig:chroma_xcorr}) gives a peak at \emph{zero} lag for every band, with peak
+correlation $0.56$, $0.63$, $0.61$ and $0.44$ for $r,i,z,y$ respectively. The zero-lag peaks,
+together with the Pearson coefficients in Table~\ref{tab:chroma} ($\rho\simeq0.81$--$0.83$ for
+$r,i,z$ and $\rho\simeq0.52$ for the lower-SNR $y$ band), confirm that the tree-ring pattern
+is in phase across bands and differs essentially only in amplitude. This is consistent with
+the DECam results of \citet{Plazas2014} and \citet{Bernstein2017} and supports a model in
+which the tree-ring shape is wavelength-independent while its amplitude scales with conversion
+depth.
+
+\begin{figure*}
+\centering
+\includegraphics[width=0.98\linewidth]{fig_chroma_filtered_grid.pdf}
+\caption{Raw (top) and tree-ring-filtered (bottom) previews of the \texttt{R02\_S02} combined
+flats in the $g,r,i,z,y$ bands from \texttt{LSSTCam/calib}. The same concentric ring pattern
+is present in every band.\label{fig:chroma_grid}}
+\end{figure*}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.95\linewidth]{fig_chroma_profiles.pdf}
+\caption{Radial tree-ring profiles of \texttt{R02\_S02} in all five bands (top: raw median
+profiles; bottom: trend-subtracted). The amplitude decreases from $g$ to $y$ while the radial
+pattern stays fixed.\label{fig:chroma_profiles}}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.95\linewidth]{fig_chroma_profiles_zoom.pdf}
+\caption{Zoom of the trend-subtracted band profiles of \texttt{R02\_S02}, showing the common
+radial phase across bands.\label{fig:chroma_profiles_zoom}}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.7\linewidth]{fig_chroma_amplitude.pdf}
+\caption{Relative tree-ring amplitude $A_b/A_g$ versus band for \texttt{R02\_S02}
+(cf.\ \citealt{Plazas2014}, their Fig.~8), showing the monotonic $g>r>i>z>y$
+ordering.\label{fig:chroma_amp}}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.95\linewidth]{fig_chroma_rescaled.pdf}
+\caption{Band profiles of \texttt{R02\_S02} before (top) and after (bottom) dividing by the
+fitted amplitude $A_b$. The rescaled profiles collapse onto the $g$-band curve, confirming a
+wavelength-independent shape.\label{fig:chroma_rescaled}}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.9\linewidth]{fig_chroma_rescaled_zoom.pdf}
+\caption{Zoom of the amplitude-rescaled band profiles of \texttt{R02\_S02}.\label{fig:chroma_rescaled_zoom}}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[width=0.75\linewidth]{fig_chroma_xcorr.pdf}
+\caption{Normalized cross-correlation of each band profile with the $g$-band profile for
+\texttt{R02\_S02}. All bands peak at zero lag, confirming phase alignment.\label{fig:chroma_xcorr}}
+\end{figure}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Full Focal-Plane Characterization} \label{sec:focal_plane}
+
+We analyze all 189 science CCDs and summarize the results using focal-plane heat maps and histograms.
+
+\subsection{Measured Quantities}
+
+For each detector and band, we measure:
+
+\begin{itemize}
+\item Fitted tree-ring center $(x_0, y_0)$ and center offset from HyeYun's catalog
+\item Tree-ring RMS amplitude (after trend subtraction)
+\item Peak-to-peak amplitude in a standard radial range (200--3500 pixels)
+\item Dominant period at a fiducial radius (2000 pixels)
+\item Period gradient with radius
+\item Azimuthal asymmetry metric (sector-to-sector RMS scatter)
+\item Correction suppression factor (RMS before/after)
+\item Predicted maximum astrometric displacement
+\item Predicted spurious shear/convergence amplitude
+\item Profile reproducibility uncertainty (from jackknife subsets)
+\item Masked pixel fraction
+\end{itemize}
+
+\subsection{Focal-Plane Maps}
+
+We present heat maps of:
+
+\begin{itemize}
+\item Tree-ring RMS amplitude (per band)
+\item Dominant radial period
+\item Center offset magnitude
+\item Azimuthal asymmetry metric
+\item Correction suppression factor
+\item Band amplitude ratios ($A_g / A_i$, $A_y / A_i$)
+\end{itemize}
+
+\subsection{Vendor Comparison}
+
+We compare ITL and e2v detectors in histograms of key metrics.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Science Impact and Calibration Implications} \label{sec:science}
+
+\subsection{Astrometric Displacement}
+
+Using Equation~\ref{eq:displacement}, the measured $i$-band profile of \texttt{R02\_S02}
+predicts a peak radial astrometric displacement of $\simeq0.025$~pixels
+(Figures~\ref{fig:r02s02_astro}--\ref{fig:r02s02_field}), with $|f|\lesssim0.005$~pixels over
+most of the well-sampled area. These values are consistent with \citet{Plazas2014} for DECam
+and, while below the LSST single-epoch astrometric requirement ($\sim$0.05--0.1~pixels), they
+are a coherent, fixed-pattern contribution that is relevant for high-precision relative
+astrometry and WCS solutions.
+
+\subsection{Spurious Shear and Convergence}
+
+From Equation~\ref{eq:kappa_gamma}, the ring amplitude $w(r)\sim10^{-4}$--$10^{-3}$ measured
+for \texttt{R02\_S02} implies spurious convergence and shear
+$\kappa_{\rm sp}\approx\gamma_{\rm sp}\approx w/2 \sim 10^{-4}$ (locally up to
+$\sim7\times10^{-4}$ near the device edge; Figures~\ref{fig:r02s02_obs} and
+\ref{fig:r02s02_templates}). The detector-level quick-look shear correlation
+(Figure~\ref{fig:r02s02_xiplus}) peaks at $|\xi_+|\sim10^{-9}$ on the ring scale and averages
+down rapidly with separation. LSST DESC weak-lensing budgets allocate $\sim$0.001--0.003 to
+residual systematics \citep{LSST_ScienceBook}; the per-detector tree-ring shear is below this
+level, but because it is a fixed spatial pattern that repeats across all visits of a given
+detector, it must be modeled and removed rather than assumed to average away.
+
+\subsection{PSF Modeling}
+
+Tree-ring-induced centroid variations introduce position-dependent PSF model residuals. \citet{Esteves2023} found PSF size variations of $\sim$2--3\% over tree-ring spatial scales. Correcting tree rings in the flat field should reduce these residuals.
+
+\subsection{Photometric Systematics}
+
+Uncorrected tree rings produce position-dependent photometric errors at the percent level. For time-domain science (e.g., supernovae, variable stars), these errors can mimic or mask intrinsic variability if objects move across tree-ring features.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Correction Model for Pipelines} \label{sec:correction}
+
+1. include astrometric profiles in WCS, include photometric profiles in photometric solution, as for DES.  Need to include in LSST Scienc epipelins, referenc E-fields paper. 
+
+2 For astrometry, an alternative coudl be to measure the 2D displavcement field rsiduals empirically, but it might not work so it's good to have the templates too. 
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Discussion} \label{sec:discussion}
+
+\subsection{Tree Rings Versus Other Sensor Signatures}
+
+Tree rings are not the only fixed-pattern structures in \lsstcam{} CCDs. Other features include:
+
+\begin{itemize}
+\item Amplifier boundaries and readout artifacts
+\item Mid-line breaks (significant in some detectors; \citealt{Esteves2023})
+\item Residual QE variations (non-azimuthally-symmetric)
+\item Hardware imprints (e.g., from masks or contamination)
+\item Diffusion-related effects
+\end{itemize}
+
+\subsection{Limitations of Azimuthal Averaging}
+
+Our 1D radial profile approach assumes perfect azimuthal symmetry. We test this assumption quantitatively using sector profiles and polar transforms (?)
+
+\subsection{Implications for On-Sky Validation}
+
+Validation of tree-ring corrections requires on-sky data:
+
+\begin{itemize}
+\item \textbf{Astrometry:} Compare star positions before/after tree-ring WCS corrections. Internal astrometric scatter should improve.
+\item \textbf{PSF residuals:} Measure PSF model residuals on stars as a function of position. Tree-ring corrections should reduce position-dependent residuals.
+\item \textbf{Weak lensing:} Analyze galaxy shape correlations. Tree-ring corrections should reduce spurious shear patterns.
+\end{itemize}
+
+On-sky validation is beyond the scope of this paper but is planned for future work.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Conclusion} \label{sec:conclusions}
+
+We have presented the focal-plane-wide, multi-band characterization of tree rings in the LSST Camera. Our key findings are:
+
+\begin{enumerate}
+\item Tree rings are clearly detected in the deep $i$-band combined flat of the ITL detector
+\texttt{R02\_S02}, with a trend-subtracted ring amplitude at the $\sim10^{-4}$ level
+(RMS $\simeq2\times10^{-4}$ in $i$, rising to $\sim10^{-3}$ near the device edge). A 2D ring
+model built from the 1D profile suppresses $\sim91\%$ of the radial ring power, validating the
+fitted center and profile.
+
+\item Tree-ring profiles are highly azimuthally symmetric, with sector-to-sector RMS scatter typically ????? . Polar coordinate diagnostics confirm that fitted centers are accurate.
+
+\item Tree-ring profiles are in phase across the five science bands ($g,r,i,z,y$; zero-lag
+cross-correlation) and differ primarily in amplitude, with ordering
+$A_g > A_r > A_i > A_z > A_y$ ($A_b/A_g = 1,\,0.80,\,0.74,\,0.65,\,0.40$ for \texttt{R02\_S02}),
+consistent with wavelength-dependent conversion depth in the back-illuminated silicon.
+
+\item The measured $i$-band profile predicts a peak radial astrometric displacement of
+$\simeq0.025$~pixels and spurious convergence/shear $\kappa_{\rm sp}\approx\gamma_{\rm sp}\sim
+10^{-4}$ for this detector --- small per visit but coherent and fixed-pattern, and therefore
+requiring template-based correction.
+
+\item We provide per-detector, per-band radial profile templates, fitted centers, and validation metrics suitable for integration into the LSST Science Pipelines.
+\end{enumerate}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

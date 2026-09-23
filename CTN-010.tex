@@ -6,8 +6,13 @@
 \documentclass[modern]{aastex701}
 
 % Package imports go here.
+\usepackage{amsmath}
+\usepackage{bm}
 
 % Local commands go here.
+\newcommand{\lsstcam}{{\it LSSTCam}}
+\newcommand{\lsst}{{\it LSST}}
+\graphicspath{{figures/}}
 \newcommand{\docRef}{CTN-010}
 \newcommand{\docUpstreamLocation}{\url{https://github.com/lsst/ctn-010}}
 
@@ -92,7 +97,11 @@ Additional Rubin Observatory funding comes from private donations, grants to uni
 %% authors a place to specify which programs were used during the creation of
 %% the manuscript. Authors should list each code and include either a
 %% citation or url to the code inside ()s when available.
-\software{LSST Science Pipelines}
+\software{astropy \citep{Astropy2013, Astropy2018}, 
+          lsst.afw \citep{LSST_Pipelines},
+          matplotlib \citep{Hunter2007},
+          numpy \citep{Harris2020},
+          scipy \citep{Virtanen2020}}
 
 %% Appendix material should be preceded with a single \appendix command.
 %% There should be a \section command for each appendix. Mark appendix
@@ -105,6 +114,9 @@ Additional Rubin Observatory funding comes from private donations, grants to uni
 
 %% \appendix
 
+
+\appendix
+\input{appendix}
 
 % Include all the relevant bib files so that references can be found from
 % lsst-texmf.
