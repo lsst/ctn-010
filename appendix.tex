@@ -74,7 +74,8 @@ brings the $\sim10^{-4}$ tree-ring modulation above the single-flat noise floor.
 
 \section{Per-Detector Tree-Ring Profile Tables} \label{app:tables}
 
-We provide tabulated radial tree-ring profiles for all detectors and bands. These tables are available online at [DOI TBD] and include:
+We provide tabulated radial tree-ring profiles for all detectors and bands. The tables are
+available from the authors (see Appendix~\ref{app:data}) and include:
 
 \begin{itemize}
 \item Detector ID
@@ -102,7 +103,58 @@ R02\_S02 & i & 100.5 & 0.0012 & 0.0003 & 0.02 & 1245 & 0 \\
 R02\_S02 & i & 101.5 & 0.0015 & 0.0003 & 0.02 & 1250 & 0 \\
 \dots & \dots & \dots & \dots & \dots & \dots & \dots & \dots
 \enddata
-\tablecomments{Full tables for all detectors and bands are available online.}
+\tablecomments{Full tables for all detectors and bands are available from the authors
+(see Appendix~\ref{app:data}).}
 \end{deluxetable*}
+
+\section{Data Products} \label{app:data}
+
+The machine-readable products behind every figure and table in this note are available from
+the authors on request, as a single $\sim$50\,MB archive carrying its own per-product
+provenance record. They are produced by the analysis notebooks in the companion
+\texttt{tree-rings-lsstcam} repository, listed by product below. Tabulated files are
+gzip-compressed ASCII with a self-describing \texttt{\#} header. The product groups are as
+follows.
+
+\begin{description}
+
+\item[\textbf{Centers.}] Tree-ring center fits for all 183 usable detectors from
+\texttt{fit\_all\_ccd\_centers.ipynb} on the deep $i$-band flat: all three fitted centers
+(\texttt{fft}, \texttt{rms}, \texttt{esteves}) plus the catalog seed (\texttt{hyeyun}), the
+per-detector recalibrated ring-wavelength band, cross-method agreement flags, the recommended
+working center per detector (\texttt{center\_winner\_by\_ccd.csv}), the seed catalog itself,
+and a provenance JSON carrying the per-detector mask census (defect pixels, MAD-clip fraction,
+good fraction) and full fitter diagnostics.
+
+\item[\textbf{Radial profiles ($i$ band).}] The 1-D radial profiles $w(r)$ from
+\texttt{extract\_1d\_profiles.ipynb}, measured on the \emph{unfiltered} combined flat
+($F/\mathrm{med}(F)-1$) in $2$-pixel annuli with a median estimator, a MAD-based standard
+error of the median, and a 1-D Gaussian trend ($\sigma=80$\,px) removed along radius. One
+profile per detector at that detector's recommended working center, plus \texttt{R02\_S02}
+at all four centers for the center comparison of Section~\ref{sec:center_compare}. Summary and 1-D
+quality-metric CSVs cover all four centers for every detector. These profiles are the
+photometric flat-field templates.
+
+\item[\textbf{Astrometric displacement ($i$ band).}] The predicted radial astrometric displacement $f(r)$,
+obtained from the profiles above by the \citet{Plazas2014} integral with the $-1$ sign
+convention and a cubic large-scale trend removal, in units of pixels.
+
+\item[\textbf{Chromatic profiles.}] Per-band ring profiles $w_b(r)$ for $b \in \{g,r,i,z,y\}$ from
+the standard five-band \texttt{LSSTCam/calib} combined flats (not the deep $i$-band stack),
+extracted about a single physical ring center per detector, together with the fitted
+amplitudes $A_b$ relative to $g$, their correlation coefficients, and cross-correlation lags.
+
+\item[\textbf{On-sky validation.}] The amplitude fit comparing the flat-derived prediction for
+\texttt{R02\_S02} against the DP2 on-sky Gaussian-process astrometric residual maps.
+
+\end{description}
+
+Two caveats travel with these products. First, the center degeneracy along the
+detector-to-center line (Section~\ref{sec:center_compare}) propagates into every profile and
+displacement curve, so the transverse center uncertainty, not the two-dimensional scatter, is
+the meaningful quantity. Second, the chromatic amplitudes are limited by the depth of the
+\texttt{LSSTCam/calib} flats rather than by the method, and the \texttt{ordering\_ok} flag is
+false for a substantial fraction of detectors; those amplitudes should be read together with
+their correlation coefficients.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
